@@ -8,6 +8,7 @@ public class TopDownCharacterController : MonoBehaviour
     public event Action<Vector2> OnLookEvent;
     public event Action<bool> OnDashEvent;
     public event Action<bool> OnGatherEvent;
+    public event Action OnEndDayEvent;
     public void CallMoveEvent(Vector2 direction)
     {
         OnMoveEvent?.Invoke(direction);
@@ -18,11 +19,18 @@ public class TopDownCharacterController : MonoBehaviour
         OnLookEvent?.Invoke(direction);
     }
 
-    public void CallDashEvent(bool isDashing){
+    public void CallDashEvent(bool isDashing)
+    {
         OnDashEvent?.Invoke(isDashing);
     }
 
-    public void CallGatherEvent(bool isGathering){
+    public void CallGatherEvent(bool isGathering)
+    {
         OnGatherEvent?.Invoke(isGathering);
+    }
+
+    public void CallEndDay()
+    {
+        OnEndDayEvent?.Invoke();
     }
 }

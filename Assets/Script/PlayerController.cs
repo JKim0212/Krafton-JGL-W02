@@ -12,9 +12,17 @@ public class PlayerController : MonoBehaviour
 
     [Header("Basic Movement")]
     TopDownCharacterController _characterController;
+    public TopDownCharacterController CharacterController
+    {
+        get { return _characterController; }
+        private set { _characterController = value; }
+    }
     Rigidbody2D _rb;
+    public Rigidbody2D Rb => _rb;
     Vector2 _direction;
     [SerializeField] Light2D torch;
+    public Light2D Torch => torch;
+    [SerializeField] float startLightLength;
     [SerializeField] float _moveSpeed;
 
 
@@ -37,6 +45,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] Slider interactionGage;
     GameObject _gatheredResource = null;
 
+    [Header("Game Play")]
+    bool _isAtDoor = false;
+    public bool IsAtDoor => _isAtDoor;
+    [SerializeField] GameObject _atDoorIndicator;
     void Awake()
     {
         gameManager = GameManager.instance;
@@ -53,35 +65,40 @@ public class PlayerController : MonoBehaviour
 
         interactionGage.maxValue = _curGatherTime;
         _dashGage = _curDashMax;
+        startLightLength = torch.pointLightOuterRadius;
     }
 
     void FixedUpdate()
     {
-        if (_isDashing && _rb.linearVelocity != Vector2.zero)
+        if (gameManager.IsPlaying)
         {
-            _dashGage -= Time.deltaTime * 10f;
-        }
-        else if (_dashGage <= _curDashMax && !_dashGageInCoolDown)
-        {
-            _dashGage += Time.deltaTime * 5f;
-        }
-        if (_isAtResource && _isGathering)
-        {
-            gatherGage += Time.deltaTime;
-            interactionGage.value = gatherGage;
-            if (gatherGage >= _curGatherTime)
+            if (_isDashing && _rb.linearVelocity != Vector2.zero)
             {
-                Gathered?.Invoke(_gatheredResource);
-                gatherGage = 0;
+                _dashGage -= Time.deltaTime * 10f;
+            }
+            else if (_dashGage <= _curDashMax && !_dashGageInCoolDown)
+            {
+                _dashGage += Time.deltaTime * 5f;
+            }
+            if (_isAtResource && _isGathering)
+            {
+                gatherGage += Time.deltaTime;
+                interactionGage.value = gatherGage;
+                if (gatherGage >= _curGatherTime)
+                {
+                    Gathered?.Invoke(_gatheredResource);
+                    gatherGage = 0;
+                    interactionGage.value = gatherGage;
+                }
+            }
+            else
+            {
+                gatherGage = 0f;
                 interactionGage.value = gatherGage;
             }
+            ApplyMovement();
         }
-        else
-        {
-            gatherGage = 0f;
-            interactionGage.value = gatherGage;
-        }
-        ApplyMovement();
+
     }
 
     //Movement
@@ -133,6 +150,11 @@ public class PlayerController : MonoBehaviour
             interactionIndicator.SetActive(true);
             _isAtResource = true;
         }
+        else if (collision.gameObject.CompareTag("Door"))
+        {
+            _isAtDoor = true;
+            _atDoorIndicator.SetActive(true);
+        }
     }
 
     void OnTriggerExit2D(Collider2D collision)
@@ -142,20 +164,24 @@ public class PlayerController : MonoBehaviour
             interactionIndicator.SetActive(false);
             _isAtResource = false;
         }
+        else if (collision.gameObject.CompareTag("Door"))
+        {
+            _isAtDoor = false;
+            _atDoorIndicator.SetActive(false);
+        }
     }
 
     //Gathering Resource
     void Gather(bool isGathering)
     {
         _isGathering = isGathering;
-
     }
 
-    public void UpdateStats(float dashMaxModifier, float gatherTimeModifier)
+    public void UpdateStats(float dashMaxModifier, float gatherTimeModifier, float lightLengthModifier)
     {
         _curDashMax = _dashMax * dashMaxModifier;
         _curGatherTime = _gatherTime *= gatherTimeModifier;
         interactionGage.maxValue = _curGatherTime;
-
+        torch.pointLightOuterRadius = startLightLength*lightLengthModifier;
     }
 }

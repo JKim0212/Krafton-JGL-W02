@@ -1,4 +1,5 @@
 
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -32,7 +33,7 @@ public class PlayerInputController : TopDownCharacterController
     }
     public void OnDashEnd()
     {
-        if (!_isDashing)
+        if (_isDashing)
         {
             _isDashing = false;
         }
@@ -56,5 +57,14 @@ public class PlayerInputController : TopDownCharacterController
             _isGathering = false;
         }
         CallGatherEvent(_isGathering);
+    }
+
+    public void OnEndDay()
+    {
+        if (GetComponent<PlayerController>().IsAtDoor)
+        {
+            CallEndDay();
+        }
+
     }
 }

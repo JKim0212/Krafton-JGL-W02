@@ -144,6 +144,15 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""EndDay"",
+                    ""type"": ""Button"",
+                    ""id"": ""84d57140-59ef-44e9-984c-31b30a6b455c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -256,6 +265,17 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""action"": ""GatherRelease"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""82a8c892-8eb4-4314-9d4b-40f074bf4836"",
+                    ""path"": ""<Keyboard>/f"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""EndDay"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -270,6 +290,7 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         m_PlayerController_DashEnd = m_PlayerController.FindAction("DashEnd", throwIfNotFound: true);
         m_PlayerController_GatherPress = m_PlayerController.FindAction("GatherPress", throwIfNotFound: true);
         m_PlayerController_GatherRelease = m_PlayerController.FindAction("GatherRelease", throwIfNotFound: true);
+        m_PlayerController_EndDay = m_PlayerController.FindAction("EndDay", throwIfNotFound: true);
     }
 
     ~@PlayerInput()
@@ -356,6 +377,7 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerController_DashEnd;
     private readonly InputAction m_PlayerController_GatherPress;
     private readonly InputAction m_PlayerController_GatherRelease;
+    private readonly InputAction m_PlayerController_EndDay;
     /// <summary>
     /// Provides access to input actions defined in input action map "PlayerController".
     /// </summary>
@@ -391,6 +413,10 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "PlayerController/GatherRelease".
         /// </summary>
         public InputAction @GatherRelease => m_Wrapper.m_PlayerController_GatherRelease;
+        /// <summary>
+        /// Provides access to the underlying input action "PlayerController/EndDay".
+        /// </summary>
+        public InputAction @EndDay => m_Wrapper.m_PlayerController_EndDay;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -435,6 +461,9 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @GatherRelease.started += instance.OnGatherRelease;
             @GatherRelease.performed += instance.OnGatherRelease;
             @GatherRelease.canceled += instance.OnGatherRelease;
+            @EndDay.started += instance.OnEndDay;
+            @EndDay.performed += instance.OnEndDay;
+            @EndDay.canceled += instance.OnEndDay;
         }
 
         /// <summary>
@@ -464,6 +493,9 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @GatherRelease.started -= instance.OnGatherRelease;
             @GatherRelease.performed -= instance.OnGatherRelease;
             @GatherRelease.canceled -= instance.OnGatherRelease;
+            @EndDay.started -= instance.OnEndDay;
+            @EndDay.performed -= instance.OnEndDay;
+            @EndDay.canceled -= instance.OnEndDay;
         }
 
         /// <summary>
@@ -546,5 +578,12 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnGatherRelease(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "EndDay" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnEndDay(InputAction.CallbackContext context);
     }
 }

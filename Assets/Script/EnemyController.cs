@@ -1,5 +1,4 @@
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -8,16 +7,19 @@ public class EnemyController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     [SerializeField] Transform player;
     NavMeshAgent agent;
+    GameManager gameManager;
 
     [Header("Movement")]
     float _patrolSpeed = 5;
     float _trackSpeed = 10;
     Rigidbody2D _rb;
+    public Rigidbody2D Rb => _rb;
     [SerializeField] Transform[] patrolPosition;
-    int patrolNumber = 0;
+    [HideInInspector] public int patrolNumber = 0;
     public bool _detectedPlayer = false;
-    public bool _isNight = false;
 
+    public enum EnemyState { Patrol, Track }
+    EnemyState currentState = EnemyState.Patrol;
 
 
     void Awake()
@@ -26,70 +28,132 @@ public class EnemyController : MonoBehaviour
         agent.updateUpAxis = false;
         agent.updateRotation = false;
         agent.updatePosition = false;
+        _rb = GetComponent<Rigidbody2D>();
+        gameManager = GameManager.instance;
     }
+
     void Start()
     {
-        _rb = GetComponent<Rigidbody2D>();
-        StartCoroutine(Patrol());
+        agent.speed = _patrolSpeed;
     }
 
     void FixedUpdate()
     {
-        _rb.position = agent.nextPosition;
-    }
-    IEnumerator Patrol()
-    {
-        agent.speed = _patrolSpeed;
-
-        while (!_detectedPlayer && !_isNight)
+        if (gameManager.IsPlaying)
         {
-            agent.SetDestination(patrolPosition[patrolNumber].position);
-
-
-            if (Vector3.Distance(transform.position, patrolPosition[patrolNumber].position) <= 1f)
+            _rb.position = agent.nextPosition;
+            switch (currentState)
             {
-                patrolNumber += 1;
-                if (patrolNumber >= patrolPosition.Length)
-                {
-                    patrolNumber = 0;
-                }
+                case EnemyState.Patrol:
+                    Patrol();
+                    break;
+                case EnemyState.Track:
+                    Track();
+                    break;
             }
-            yield return new WaitForSeconds(1f);
         }
-
-        StartCoroutine(Track());
     }
 
-    IEnumerator Track()
+    void Patrol()
     {
-        agent.speed = _trackSpeed;
-        while (_detectedPlayer || _isNight)
+
+        Vector3 walkPoint = patrolPosition[patrolNumber].position;
+        agent.SetDestination(walkPoint);
+
+        Vector3 distanceToWalkPoint = transform.position - walkPoint;
+
+        // walkPoint 도달 시
+        if (distanceToWalkPoint.magnitude < 1f)
         {
-            agent.SetDestination(player.position);
-
-            yield return null; // Prevent freezing by allowing the loop to yield execution
-            StartCoroutine(CheckDetection());
+            // 다음 포인트로 이동
+            patrolNumber++;
+            if (patrolNumber >= patrolPosition.Length)
+            {
+                patrolNumber = 0; // 마지막 포인트에 도달하면 처음으로 돌아감
+            }
         }
-
-        StartCoroutine(Patrol());
     }
 
-    IEnumerator CheckDetection()
+    void Track()
     {
-        yield return new WaitForSeconds(3f);
-        if (Vector3.Distance(transform.position, player.position) > 5f)
-        {
-            _detectedPlayer = false;
-        }
+        agent.SetDestination(player.position);
+        Invoke(nameof(Search), 5f);
     }
+    void Search()
+    {
+        if (Vector3.Distance(transform.position, player.position) < 1f)
+        {
+            Invoke(nameof(Capture), 3f);
+            return;
+        }
+        ReturnToPatrol();
+    }
+    void ReturnToPatrol()
+    {
+        currentState = EnemyState.Patrol;
+    }
+    // public IEnumerator Patrol()
+    // {
 
-    void OnCollisionEnter2D(Collision2D collision)
+
+    //     while (!_detectedPlayer && gameManager.IsNight && gameManager.IsPlaying)
+    //     {
+
+    //         agent.SetDestination(patrolPosition[patrolNumber].position);
+
+
+    //         if (Vector3.Distance(transform.position, patrolPosition[patrolNumber].position) <= 1f)
+    //         {
+    //             patrolNumber += 1;
+    //             if (patrolNumber >= patrolPosition.Length)
+    //             {
+    //                 patrolNumber = 0;
+    //             }
+    //         }
+    //         yield return new WaitForSeconds(1f);
+    //     }
+    //     agent.speed = _trackSpeed;
+    //     StartCoroutine(Track());
+    // }
+
+    // IEnumerator Track()
+    // {
+
+    //     while (_detectedPlayer || gameManager.IsNight)
+    //     {
+    //         agent.SetDestination(player.position);
+
+    //         yield return null; // Prevent freezing by allowing the loop to yield execution
+    //         StartCoroutine(CheckDetection());
+    //         if (Vector2.Distance(player.position, transform.position) <= 0.1f)
+    //         {
+    //             StartCoroutine(Capture());
+    //         }
+    //     }
+
+    //     StartCoroutine(Patrol());
+    // }
+
+    // IEnumerator CheckDetection()
+    // {
+    //     yield return new WaitForSeconds(3f);
+    //     if (Vector3.Distance(transform.position, player.position) > 10f)
+    //     {
+    //         _detectedPlayer = false;
+    //     }
+    // }
+
+    void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            _detectedPlayer = true;
+            currentState = EnemyState.Track;
         }
     }
-
+    void Capture()
+    {
+        currentState = EnemyState.Patrol;
+        gameManager.Captured();
+    }
 
 }
