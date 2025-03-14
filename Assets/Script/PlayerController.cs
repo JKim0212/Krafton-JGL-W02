@@ -19,7 +19,10 @@ public class PlayerController : MonoBehaviour
     }
     Rigidbody2D _rb;
     public Rigidbody2D Rb => _rb;
+    [SerializeField] GameObject _pointers;
+    public GameObject Pointers => _pointers;
     Vector2 _direction;
+    float angle = 0;
     [SerializeField] Light2D torch;
     public Light2D Torch => torch;
     [SerializeField] float startLightLength;
@@ -30,10 +33,16 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float _dashMult;
     float _dashModifier = 1;
     bool _isDashing = false;
+    public bool IsDashing => _isDashing;
     [SerializeField] float _dashMax = 100f;
     float _curDashMax = 100f;
+    public float CurDashMax => _curDashMax;
     float _dashGage = 100f;
+    public float DashGage => _dashGage;
+    float _dashRecoveryTime = 5f;
+    [SerializeField] float _startDashRecoveryTime = 5f;
     bool _dashGageInCoolDown = false;
+    public bool DashGageInCooldown => _dashGageInCoolDown;
 
     [Header("Resource")]
     bool _isAtResource = false;
@@ -75,10 +84,15 @@ public class PlayerController : MonoBehaviour
             if (_isDashing && _rb.linearVelocity != Vector2.zero)
             {
                 _dashGage -= Time.deltaTime * 10f;
+                if (_dashGage <= 0)
+                {
+                    _characterController._isDashing = false;
+                    Dash(false);
+                }
             }
             else if (_dashGage <= _curDashMax && !_dashGageInCoolDown)
             {
-                _dashGage += Time.deltaTime * 5f;
+                _dashGage += Time.deltaTime * _dashRecoveryTime;
             }
             if (_isAtResource && _isGathering)
             {
@@ -104,8 +118,7 @@ public class PlayerController : MonoBehaviour
     //Movement
     void Look(Vector2 direction)
     {
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.Euler(0, 0, angle);
+        angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
     }
 
     void Move(Vector2 direction)
@@ -137,6 +150,7 @@ public class PlayerController : MonoBehaviour
 
     void ApplyMovement()
     {
+        transform.rotation = Quaternion.Euler(0, 0, angle);
         _rb.linearVelocity = _direction * _moveSpeed * _dashModifier;
     }
 
@@ -154,6 +168,8 @@ public class PlayerController : MonoBehaviour
         {
             _isAtDoor = true;
             _atDoorIndicator.SetActive(true);
+        } else if(collision.gameObject.CompareTag("Scrap Location")){
+            _pointers.transform.GetChild(collision.gameObject.GetComponent<ScrapLocation>().locationNum).gameObject.SetActive(true);
         }
     }
 
@@ -177,11 +193,13 @@ public class PlayerController : MonoBehaviour
         _isGathering = isGathering;
     }
 
-    public void UpdateStats(float dashMaxModifier, float gatherTimeModifier, float lightLengthModifier)
+    public void UpdateStats(float dashMaxModifier, float gatherTimeModifier, float lightLengthModifier, float dashRecoveryTimeModifier)
     {
         _curDashMax = _dashMax * dashMaxModifier;
+        _dashGage = _curDashMax;
         _curGatherTime = _gatherTime *= gatherTimeModifier;
         interactionGage.maxValue = _curGatherTime;
-        torch.pointLightOuterRadius = startLightLength*lightLengthModifier;
+        torch.pointLightOuterRadius = startLightLength * lightLengthModifier;
+        _dashRecoveryTime = _startDashRecoveryTime * dashRecoveryTimeModifier;
     }
 }

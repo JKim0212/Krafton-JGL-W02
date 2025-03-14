@@ -1,14 +1,16 @@
 
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 
 public class PlayerInputController : TopDownCharacterController
 {
+    PlayerController _pc;
+    void Start()
+    {
+        _pc = GetComponent<PlayerController>();
+    }
 
-    bool _isDashing = false;
-    bool _isGathering = false;
     public void OnMove(InputValue value)
     {
         Vector2 direction = value.Get<Vector2>();
@@ -25,7 +27,7 @@ public class PlayerInputController : TopDownCharacterController
 
     public void OnDashStart()
     {
-        if (!_isDashing)
+        if (!_isDashing && !_pc.DashGageInCooldown)
         {
             _isDashing = true;
         }
@@ -36,9 +38,8 @@ public class PlayerInputController : TopDownCharacterController
         if (_isDashing)
         {
             _isDashing = false;
+            CallDashEvent(_isDashing);
         }
-        CallDashEvent(_isDashing);
-
     }
 
     public void OnGatherPress()

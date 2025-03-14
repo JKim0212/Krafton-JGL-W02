@@ -9,6 +9,9 @@ public class TopDownCharacterController : MonoBehaviour
     public event Action<bool> OnDashEvent;
     public event Action<bool> OnGatherEvent;
     public event Action OnEndDayEvent;
+
+    [HideInInspector] public bool _isDashing = false;
+    protected bool _isGathering = false;
     public void CallMoveEvent(Vector2 direction)
     {
         OnMoveEvent?.Invoke(direction);
