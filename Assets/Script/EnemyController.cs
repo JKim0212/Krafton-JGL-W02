@@ -139,7 +139,7 @@ public class EnemyController : MonoBehaviour
     //플레이어 접촉 시 잡음 상태 시작
     void Capture()
     {
-        gameManager.Captured();
+        StartCoroutine(gameManager.Captured());
     }
 
 }

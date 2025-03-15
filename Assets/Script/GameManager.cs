@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -12,9 +13,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] Transform _resourcePositions;
     [SerializeField] Transform _scraps;
     [SerializeField] UIManager _ui;
+    [SerializeField] GameObject _slash;
     bool _isPlaying = true;
     public bool IsPlaying => _isPlaying;
-
+    [SerializeField] GameObject _endingFade, _endingScene;
     [Header("Player Stats")]
     float _lightLengthModifier = 1;
     float _dashMaxModifier = 1;
@@ -105,15 +107,19 @@ public class GameManager : MonoBehaviour
         player.transform.rotation = Quaternion.Euler(0, 0, -180);
         enemy.Agent.enabled = false;
         enemy.transform.position = enemyStartPosition.position;
-        _ui.EndDay();
+        _ui.UpdateUpgradeText(scrapNum, batteryNum, moneyNum, day);
+        StartCoroutine(_ui.EndDay());
 
     }
 
-    public void Captured()
+    public IEnumerator Captured()
     {
         tempScrap = 0;
         tempBattery = 0;
         tempMoney = 0;
+        _slash.SetActive(true);
+        yield return new WaitForSeconds(0.5f);
+        _slash.SetActive(false);
         EndDay();
     }
 
@@ -142,6 +148,10 @@ public class GameManager : MonoBehaviour
     }
     public void NextDay()
     {
+        if(scrapNum >= 50){
+            StartCoroutine(Ending());
+            return;
+        }
         day += 1;
         _isNight = false;
         SpawnResources();
@@ -154,8 +164,71 @@ public class GameManager : MonoBehaviour
         enemy.Agent.enabled = true;
         enemy.ReturnToPatrol();
         _ui.UpdateUI(player.CurDashMax, time, tempScrap, tempBattery, tempMoney, day);
-        _ui.NextDay();
+        StartCoroutine(_ui.NextDay());
         _isPlaying = true;
+    }
 
+    IEnumerator Ending(){
+        _ui.HideoutUI.SetActive(false);
+        _endingFade.SetActive(true);
+        yield return new WaitForSeconds(0.5f);
+        player.transform.position = new Vector3(318,0,0);
+        player.gameObject.SetActive(false);
+        _endingScene.SetActive(true);
+        yield return new WaitForSeconds(2.5f);
+        _endingScene.SetActive(false);
+        _endingFade.SetActive(false);
+        _ui.Ending(day);
+
+    }
+
+    public void Upgrade(int upgradeCode)
+    {
+        switch (upgradeCode)
+        {
+            case 0:
+                if (batteryNum >= 1)
+                {
+                    batteryNum -= 1;
+                    _lightLengthModifier *= 1.2f;
+                }
+                break;
+            case 1:
+                if (moneyNum >= 1)
+                {
+                    moneyNum -= 1;
+                    _dashMaxModifier *= 1.2f;
+                }
+                break;
+            case 2:
+                if (moneyNum >= 1)
+                {
+                    moneyNum -= 1;
+                    _dashRecoveryTimeModifier *= 1.5f;
+                }
+                break;
+            case 3:
+                if (moneyNum >= 1)
+                {
+                    moneyNum -= 1;
+                    _gatherTimeModifier *= 0.9f;
+                }
+                break;
+            case 4:
+                if (scrapNum >= 2)
+                {
+                    scrapNum -= 2;
+                    batteryNum += 1;
+                }
+                break;
+            case 5:
+                if (scrapNum >= 2)
+                {
+                    scrapNum -= 2;
+                    moneyNum += 1;
+                }
+                break;
+        }
+        _ui.UpdateUpgradeText(scrapNum, batteryNum, moneyNum, day);
     }
 }
