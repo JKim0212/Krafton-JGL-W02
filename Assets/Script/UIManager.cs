@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
-
+using UnityEngine.SceneManagement;
 public class UIManager : MonoBehaviour
 {
     [SerializeField] GameObject _playUI, _hideoutUI, _torchUpgrade, _charcterUpgrade, _transmuter;
@@ -10,7 +10,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] Slider _dash;
     [SerializeField] TextMeshProUGUI _timer, _scrapText, _batteryText, _moneyText, _dayText;
     [SerializeField] TextMeshProUGUI _hideoutScrapText, _hideoutBatteryText, _hideoutMoneyText, _hideoutDayText, _endingText;
-    [SerializeField] GameObject _fade, _endingScreen;
+    [SerializeField] GameObject _fade, _endingScreen, _startGameScreen;
     public void UpdateUI(float _dashMax, float time, int scrapNum, int batteryNum, int moneyNum, int day)
     {
         _dash.maxValue = _dashMax;
@@ -79,8 +79,21 @@ public class UIManager : MonoBehaviour
         GameManager.instance.Upgrade(upgradeCode);
     }
 
+    public void StartGame(){
+        _startGameScreen.SetActive(false);
+        GameManager.instance.NextDay();
+    }  
     public void Ending(int day){
         _endingText.text = $"It took {day} days.";
         _endingScreen.SetActive(true);
+    }
+
+    public void Restart(){
+        Scene scene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(scene.name);
+    }
+
+    public void Exit(){
+        Application.Quit();
     }
 }

@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] Transform _scraps;
     [SerializeField] UIManager _ui;
     [SerializeField] GameObject _slash;
-    bool _isPlaying = true;
+    bool _isPlaying = false;
     public bool IsPlaying => _isPlaying;
     [SerializeField] GameObject _endingFade, _endingScene;
     [Header("Player Stats")]
@@ -47,7 +47,6 @@ public class GameManager : MonoBehaviour
     {
         player.Gathered += AddResource;
         player.CharacterController.OnEndDayEvent += EndDay;
-        NextDay();
     }
 
     void Update()

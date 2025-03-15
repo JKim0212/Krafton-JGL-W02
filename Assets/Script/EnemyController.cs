@@ -5,9 +5,10 @@ using UnityEngine.AI;
 public class EnemyController : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    [SerializeField] Transform player;
+    [SerializeField] Transform player, sprite;
     NavMeshAgent _agent;
     public NavMeshAgent Agent => _agent;
+
     GameManager gameManager;
 
     [Header("Movement")]
@@ -47,7 +48,11 @@ public class EnemyController : MonoBehaviour
             {
                 Capture();
             }
+            Vector3 direction = _agent.nextPosition - new Vector3(_rb.position.x, _rb.position.y, 0);
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            sprite.rotation = Quaternion.Euler(0,0, angle-90);
             _rb.position = _agent.nextPosition;
+
             //현재 패턴에 따라 행동
             switch (currentState)
             {
