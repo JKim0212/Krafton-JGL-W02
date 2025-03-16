@@ -1,14 +1,15 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class EnemyController : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public event Action<bool> FlickerEvent;
     [SerializeField] Transform player, sprite;
+    [SerializeField] GameObject footprint, _blood;
     NavMeshAgent _agent;
     public NavMeshAgent Agent => _agent;
-
     GameManager gameManager;
 
     [Header("Movement")]
@@ -18,10 +19,11 @@ public class EnemyController : MonoBehaviour
     public Rigidbody2D Rb => _rb;
     [SerializeField] Transform[] patrolPosition;
     [HideInInspector] public int patrolNumber = 0;
-    public bool _detectedPlayer = false;
+    [HideInInspector] public bool _detectedPlayer = false;
 
     public enum EnemyState { Patrol, Track, Night }
     EnemyState currentState = EnemyState.Patrol;
+
 
 
     void Awake()
@@ -44,13 +46,14 @@ public class EnemyController : MonoBehaviour
         if (gameManager.IsPlaying)
         {
             //플레이어와 접근할 시 플레이어 잡음 
-            if (Vector2.Distance(player.position, transform.position) <= 1f)
+            if (Vector2.Distance(player.position, transform.position) <= 2f)
             {
                 Capture();
+                return;
             }
             Vector3 direction = _agent.nextPosition - new Vector3(_rb.position.x, _rb.position.y, 0);
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-            sprite.rotation = Quaternion.Euler(0,0, angle-90);
+            sprite.rotation = Quaternion.Euler(0, 0, angle - 90);
             _rb.position = _agent.nextPosition;
 
             //현재 패턴에 따라 행동
@@ -78,6 +81,7 @@ public class EnemyController : MonoBehaviour
     {
         if (gameManager.IsNight)
         {
+            Danger(true);
             _agent.speed = _trackSpeed;
             currentState = EnemyState.Night;
             return;
@@ -106,6 +110,7 @@ public class EnemyController : MonoBehaviour
     {
         if (gameManager.IsNight)
         {
+            Danger(true);
             _agent.speed = _trackSpeed;
             currentState = EnemyState.Night;
             return;
@@ -127,7 +132,7 @@ public class EnemyController : MonoBehaviour
     }
     public void ReturnToPatrol()
     {
-        // _agent.SetDestination(patrolPosition[patrolNumber].position);
+        Danger(false);
         currentState = EnemyState.Patrol;
     }
 
@@ -136,6 +141,7 @@ public class EnemyController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
+            Danger(true);
             currentState = EnemyState.Track;
             _agent.speed = _trackSpeed;
         }
@@ -145,6 +151,30 @@ public class EnemyController : MonoBehaviour
     void Capture()
     {
         StartCoroutine(gameManager.Captured());
+    }
+
+    public IEnumerator Footprinting()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(0.5f);
+            Vector3 direction = _agent.nextPosition - new Vector3(_rb.position.x, _rb.position.y, 0);
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            Instantiate(footprint, transform.position, Quaternion.Euler(0, 0, angle));
+        }
+
+    }
+
+    public void Danger(bool inDanger)
+    {
+        if (inDanger)
+        {
+            _blood.SetActive(true);
+        }
+        else
+        {
+            _blood.SetActive(false);
+        }
     }
 
 }

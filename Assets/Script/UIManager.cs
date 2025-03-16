@@ -11,6 +11,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI _timer, _scrapText, _batteryText, _moneyText, _dayText;
     [SerializeField] TextMeshProUGUI _hideoutScrapText, _hideoutBatteryText, _hideoutMoneyText, _hideoutDayText, _endingText;
     [SerializeField] GameObject _fade, _endingScreen, _startGameScreen;
+    [SerializeField] GameObject _tutorial, _backgroundText, _backgroundText1, _backgroundText2, _backgroundText3, _control, _scrapImage, _startButton;
     public void UpdateUI(float _dashMax, float time, int scrapNum, int batteryNum, int moneyNum, int day)
     {
         _dash.maxValue = _dashMax;
@@ -29,7 +30,12 @@ public class UIManager : MonoBehaviour
         _dash.value = dashGage;
         int min = (int)(time / 60f);
         int sec = (int)Mathf.Ceil(time % 60f) - 1;
-        _timer.text = min.ToString() + ":" + sec.ToString("D2");
+        if(time <= 0f){
+            _timer.text = "0:00";    
+        } else {
+            _timer.text = min.ToString() + ":" + sec.ToString("D2");
+        }
+        
     }
 
     public void UpdateUpgradeText(int scrapNum, int batteryNum, int moneyNum, int day)
@@ -79,21 +85,51 @@ public class UIManager : MonoBehaviour
         GameManager.instance.Upgrade(upgradeCode);
     }
 
-    public void StartGame(){
+    public void StartGame()
+    {
         _startGameScreen.SetActive(false);
-        GameManager.instance.NextDay();
-    }  
-    public void Ending(int day){
-        _endingText.text = $"It took {day} days.";
+        StartCoroutine(Tutorial());
+    }
+    public void Ending(int day)
+    {
+        _endingText.text = $"총 {day} 일이 걸렸습니다.";
         _endingScreen.SetActive(true);
     }
 
-    public void Restart(){
+    public void Restart()
+    {
         Scene scene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(scene.name);
     }
 
-    public void Exit(){
+    public void Exit()
+    {
         Application.Quit();
+    }
+
+    IEnumerator Tutorial()
+    {
+        _tutorial.SetActive(true);
+        _backgroundText.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        _backgroundText.SetActive(false);
+        yield return new WaitForSeconds(0.5f);
+        _backgroundText1.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        _backgroundText1.SetActive(false);
+        yield return new WaitForSeconds(0.5f);
+        _backgroundText2.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        _backgroundText2.SetActive(false);
+        yield return new WaitForSeconds(0.5f);
+        _backgroundText3.SetActive(true);
+        _control.SetActive(true);
+        _scrapImage.SetActive(true);
+        _startButton.SetActive(true);
+    }
+
+    public void EndTutorial(){
+        _tutorial.SetActive(false);
+        GameManager.instance.NextDay();
     }
 }

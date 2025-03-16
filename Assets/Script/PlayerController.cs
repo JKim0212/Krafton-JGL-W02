@@ -58,6 +58,8 @@ public class PlayerController : MonoBehaviour
     bool _isAtDoor = false;
     public bool IsAtDoor => _isAtDoor;
     [SerializeField] GameObject _atDoorIndicator;
+    Coroutine coroutine;
+    public Coroutine GetCo => coroutine;
     void Awake()
     {
         gameManager = GameManager.instance;
@@ -168,7 +170,9 @@ public class PlayerController : MonoBehaviour
         {
             _isAtDoor = true;
             _atDoorIndicator.SetActive(true);
-        } else if(collision.gameObject.CompareTag("Scrap Location")){
+        }
+        else if (collision.gameObject.CompareTag("Scrap Location"))
+        {
             _pointers.transform.GetChild(collision.gameObject.GetComponent<ScrapLocation>().locationNum).gameObject.SetActive(true);
         }
     }

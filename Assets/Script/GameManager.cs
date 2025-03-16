@@ -1,8 +1,6 @@
 using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
+using Unity.Cinemachine;
 using UnityEngine;
-using UnityEngine.AI;
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
@@ -35,8 +33,14 @@ public class GameManager : MonoBehaviour
     public bool IsNight => _isNight;
     [Header("Resource")]
     [SerializeField] int scrapNum, batteryNum, moneyNum = 0;
-    private int tempScrap, tempBattery, tempMoney = 0;
+    int tempScrap, tempBattery, tempMoney = 0;
 
+    [SerializeField] CinemachineCamera _vcam;
+    float _initialSize = 10;
+    float _modifiedSize = 10;
+
+    Coroutine footprinting;
+  
 
     void Awake()
     {
@@ -47,6 +51,7 @@ public class GameManager : MonoBehaviour
     {
         player.Gathered += AddResource;
         player.CharacterController.OnEndDayEvent += EndDay;
+        _vcam.Lens.OrthographicSize = _initialSize;
     }
 
     void Update()
@@ -90,6 +95,7 @@ public class GameManager : MonoBehaviour
 
     public void EndDay()
     {
+        _vcam.Lens.OrthographicSize = _initialSize;
         _isPlaying = false;
         DeSpawnResources();
         player.Rb.linearVelocity = Vector2.zero;
@@ -100,6 +106,10 @@ public class GameManager : MonoBehaviour
         tempBattery = 0;
         tempMoney = 0;
         _hideout.SetActive(true);
+        enemy.Danger(false);
+        if(footprinting != null){
+            enemy.StopCoroutine(footprinting);
+        }
         player.Torch.gameObject.SetActive(false);
         player.Pointers.SetActive(false);
         player.transform.position = _hideoutLocation.position;
@@ -147,7 +157,10 @@ public class GameManager : MonoBehaviour
     }
     public void NextDay()
     {
-        if(scrapNum >= 50){
+
+        if (scrapNum >= 50)
+        {
+            _vcam.Lens.OrthographicSize = _initialSize;
             StartCoroutine(Ending());
             return;
         }
@@ -163,15 +176,18 @@ public class GameManager : MonoBehaviour
         enemy.Agent.enabled = true;
         enemy.ReturnToPatrol();
         _ui.UpdateUI(player.CurDashMax, time, tempScrap, tempBattery, tempMoney, day);
+        _vcam.Lens.OrthographicSize = _modifiedSize;
         StartCoroutine(_ui.NextDay());
+        footprinting = enemy.StartCoroutine(enemy.Footprinting());
         _isPlaying = true;
     }
 
-    IEnumerator Ending(){
+    IEnumerator Ending()
+    {
         _ui.HideoutUI.SetActive(false);
         _endingFade.SetActive(true);
         yield return new WaitForSeconds(0.5f);
-        player.transform.position = new Vector3(318,0,0);
+        player.transform.position = new Vector3(318, 0, 0);
         player.gameObject.SetActive(false);
         _endingScene.SetActive(true);
         yield return new WaitForSeconds(2.5f);
@@ -190,6 +206,11 @@ public class GameManager : MonoBehaviour
                 {
                     batteryNum -= 1;
                     _lightLengthModifier *= 1.2f;
+                    _modifiedSize *= 1.1f;
+                    if (_modifiedSize > 15)
+                    {
+                        _modifiedSize = 15;
+                    }
                 }
                 break;
             case 1:
